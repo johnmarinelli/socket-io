@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 50px; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+      #bottom-bar {
+        position: fixed;
+        bottom: 0px;
+      }
+      #is-typing {
+        text-align: right;
+      }
+      #users-online {
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="messages">
+    </ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <div id="bottom-bar">
+      <p id="is-typing"></p>
+      <a id="users-online">Who's Online</a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    $(document).ready(function() {
+      var socket = io();
+      $('form').submit(function() {
+        var msg = $('#m').val();
+
+        // check if it's a nickname change
+        if (msg.indexOf('/nick') === 0) {
+          socket.emit('nickname', msg.split('/nick ')[1]);
+        }
+
+        // check if it's a private message
+        else if (msg.indexOf('/msg') === 0) {
+          var to = msg.split(' ')[1],
+              body = msg.split(' ').splice(2).join(' ');
+              console.log(socket.nickname);
+          socket.emit('pm', { to: to, from: socket.nickname, body: body });
+        }
+        else {
+          // client side socket emits 'chat message'
+          socket.emit('chat message', $('#m').val());
+        }
+
+        // reset message box
+        $('#m').val('');
+        return false;
+      });
+
+      // helper function 
+      function appendToMessageBox(msg, color) {
+        color = color || 'black';
+        $('ul#messages').append($('<li>').text(msg).css('color', color));
+      }
+
+      // standard message from server
+      socket.on('display chat message', function(msg) {
+        appendToMessageBox(msg);
+      });
+   
+      // { user } is typing... feature
+      $('form input#m').focusin(function() {
+        socket.emit('user is typing', true);
+      }).focusout(function() {
+        socket.emit('user is typing', false);
+      });
+
+      // retrieve 'display is typing message' from server
+      socket.on('display is typing message', function(msg) {
+        if (msg) {
+          // if there's a message, show it
+          $('#is-typing').text(msg).show();
+        }
+        else {
+          // if there's no message, hide 'is typing' area
+          $('#is-typing').hide();
+        }
+      });
+
+      // receive a private message
+      socket.on('pm', function(msg) {
+        appendToMessageBox(msg, 'blue');
+      });
+
+      // show who's online: request list from server
+      $('a#users-online').click(function() {
+        $.ajax({
+          type: 'get',
+          url: '/users_online',
+        }).done(function(data) {
+          var names = data.join('\n');
+          alert(names);
+        });
+      });
+
+      // change client side socket nickname
+      socket.on('change clientside nickname', function(nick) {
+        socket.nickname = nick;
+      });
+    })
+    </script>
+  </body>
+</html>
