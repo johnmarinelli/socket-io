@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO whiteboard</title>
+    <style>
+    canvas {
+      cursor: crosshair;
+    }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas">
+    </canvas>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script> 
+    var socket = io();
+    
+    // callback to send an array of coordinates to server.
+    // server will broadcast a 'draw line' event
+    // coords: [ {x, y}, {x, y} ]
+    var lineFinished = function(coords) {
+      socket.emit('send coords', coords);
+    };
+
+    // receive an array of coordinates from server.
+    socket.on('receive coords', function(coords, id) {
+      if (socket.id === id) return;
+      CanvasPainter.drawLine(coords);
+    });
+
+    var CanvasPainter = function(c, lineCallback) {
+      var painter = {},
+          canvas = c,
+          leftOffset = c.offsetLeft,
+          topOffset = c.offsetTop,
+          context = c.getContext('2d'),
+          isDown = false,
+          canvasX = 0,
+          canvasY = 0,
+          currentLine = [];
+
+      // initialize
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      context.fillStyle = "#000";
+      context.lineWidth = 5;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      // start drawing
+      canvas.onmousedown = function(e) {
+        isDown = true;
+        context.beginPath();
+        canvasX = e.pageX - canvas.offsetLeft;
+        canvasY = e.pageY - canvas.offsetTop;
+        context.moveTo(canvasX, canvasY);
+
+        currentLine.push({ x: canvasX, y: canvasY });
+      };
+
+      // push new coords into currentLine array
+      canvas.onmousemove = function(e) {
+        if (isDown) {
+          canvasX = e.pageX - canvas.offsetLeft;
+          canvasY = e.pageY - canvas.offsetTop;
+          context.lineTo(canvasX, canvasY);
+          context.strokeStyle = "#fff";
+          context.stroke();
+          currentLine.push({ x: canvasX, y: canvasY });
+        }
+      };
+
+      // send finished currentLine, reset currentLine
+      canvas.onmouseup = function(e) {
+        isDown = false;
+        
+        // send array of line points to socket
+        lineCallback(currentLine);
+        currentLine = [];
+      };
+
+      var painter = {
+        drawLine: function(coords) {
+          var i = 0,
+              start = coords.shift(),
+              len = coords.length;
+
+          context.moveTo(start.x, start.y);
+
+          for ( ; i < len; ++i) {
+            var coord = coords[i];
+            context.lineTo(coord.x, coord.y);
+            context.strokeStyle = "#fff";
+            context.stroke();
+          }
+        }
+      };
+
+      return painter;
+    }(document.getElementById('canvas'), lineFinished);
+
+    </script>
+  </body>
+</html>
