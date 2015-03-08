@@ -12,7 +12,6 @@ suite('graph', function() {
   test('returns true when making a 0x0 graph', function(done) {
     var g = new Graph(0, 0, 0, 0);
 
-  console.log(g.shape());
     expect(g.shape()[0]).to.equal(0);
     expect(g.shape()[1]).to.equal(0);
     expect(g.shape()[2]).to.equal(0);
