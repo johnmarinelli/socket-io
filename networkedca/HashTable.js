@@ -1,6 +1,7 @@
 function HashTable(hasher) {
   this.mHasher = hasher;
   this.mBuckets = [];
+  this.mSize = 0;
 };
 
 HashTable.prototype.insert = function(cell) {
@@ -28,15 +29,78 @@ HashTable.prototype.insert = function(cell) {
   }
 
   // if there wasn't an equivalent cell in the bucket, append cell
-  if (!overwrite) this.mBuckets[index].push(cell);
+  if (!overwrite) { 
+    this.mBuckets[index].push(cell);
+    ++this.mSize;
+  }
 };
 
-HashTable.prototype.find = function(x, y) {
+// simple find and return.
+HashTable.prototype.get = function(cell) {
+  var hashTable = this,
+      x = cell.mX,
+      y = cell.mY;
+
+  return this.find(x, y, function(data, err) {
+    if (err) {
+      console.log(err);
+      return false;
+    }
+    return data.element;
+  });
+};
+
+// find and remove.
+HashTable.prototype.remove = function(cell) {
+  var hashTable = this,
+      x = cell.mX,
+      y = cell.mY;
+  
+  return this.find(x, y, function(data, err) {
+    // callback.  removes the found element.
+    if (err) {
+      console.log(err);
+      return false;
+    }
+    
+    var bucketNum = data.bucketNum,
+        bucketIndex = data.bucketIndex;
+
+    hashTable.mBuckets[bucketNum].splice(bucketIndex, 1);
+    --hashTable.mSize;
+
+    // the find() function returns whatever this cb returns.
+    return true;
+  });
+};
+
+// find and update.
+HashTable.prototype.update = function(cell, newData) {
+  var hashTable = this,
+      x = cell.mX,
+      y = cell.mY;
+
+  return this.find(x, y, function(data, err) {
+    if (err) {
+      console.log(err);
+      return false;
+    }
+    
+    data.element.update(newData);
+    return data.element;
+  });
+};
+
+// 1: call find()
+// 2: find() returns cb
+// 3: cb returns true/false
+// 4: find() returns true/false
+HashTable.prototype.find = function(x, y, cb) {
   var index = this.mHasher(x, y),
       bucket = this.mBuckets[index];
   
   // if there's no bucket, return false
-  if (undefined === bucket) return false;
+  if (undefined === bucket) return cb(false, 'Bucket doesn\'t exist at index: ' + index);
 
   var len = bucket.length,
       j = 0;
@@ -45,11 +109,34 @@ HashTable.prototype.find = function(x, y) {
     var other = bucket[j];
     if (other.mX === x &&
         other.mY === y) {
-      return bucket[j];
+      // return the element along with relevant data
+      return cb({
+        element: other,
+        bucketNum: index,
+        bucketIndex: j
+      });
     }
   }
 
-  return false;
+  // there's a bucket, but no item
+  return cb(false, 'No element found at index: ' + index + '.  X: ' + x + ' Y: ' + y);
+};
+
+HashTable.prototype.forEach = function(cb) {
+  var bucketsCount = this.mBuckets.length,
+      i = 0;
+  
+  for ( ; i < bucketsCount; ++i) {
+    // TODO: 
+    // have an array of valid indices instead of doing this ugly check
+    if (undefined !== this.mBuckets[i]) {
+      var elemCount = this.mBuckets[i].length,
+          j = 0;
+      for ( ; j < elemCount; ++j) {
+        cb(this.mBuckets[i][j]);
+      }
+    }
+  }
 };
 
 exports.HashTable = HashTable;

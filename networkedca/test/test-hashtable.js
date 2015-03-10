@@ -14,8 +14,9 @@ suite('hashtable', function() {
     var ht = new HashTable(function(x,y) {
       return (x ^ (y << 1)) >> 1;
     });
-    ht.insert(new Cell(1,2, false));
-    expect(ht.find(1,2).mAlive).to.equal(false);
+    var c1 = new Cell(1,2, false);
+    ht.insert(c1);
+    expect(ht.get(c1).mAlive).to.equal(false);
     done();
   });
   
@@ -24,12 +25,51 @@ suite('hashtable', function() {
       return (x ^ (y << 1)) >> 1;
     });
 
-    ht.insert(new Cell(1,2, false));
-    ht.insert(new Cell(3,4, true));
-    ht.insert(new Cell(5,6, false));
-    ht.insert(new Cell(1,2, true));
+    var c1 = new Cell(1,2, true);
+    var c2 = new Cell(3,4, true);
+    var c3 = new Cell(5,6, false);
 
-    expect(ht.find(1,2).mAlive).to.equal(true);
+    ht.insert(c1);
+    ht.insert(c2);
+    ht.insert(c3);
+    
+    expect(ht.get(c1).mAlive).to.equal(true);
+    done();
+  });
+
+  test('remove cell from hashtable', function(done) {
+    var ht = new HashTable(function(x,y) {
+      return (x ^ (y << 1)) >> 1;
+    });
+
+    var c1 = new Cell(1,2, true);
+    var c2 = new Cell(3,4, true);
+    var c3 = new Cell(5,6, false);
+
+    ht.insert(c1);
+    ht.insert(c2);
+    ht.insert(c3);
+    
+    expect(ht.remove(c1)).to.equal(true);
+    done();
+  });
+  
+  test('update cell from hashtable', function(done) {
+    var ht = new HashTable(function(x,y) {
+      return (x ^ (y << 1)) >> 1;
+    });
+
+    var c1 = new Cell(1,2, true);
+    var c2 = new Cell(3,4, true);
+    var c3 = new Cell(5,6, false);
+
+    ht.insert(c1);
+    ht.insert(c2);
+    ht.insert(c3);
+
+    ht.update(c2, { alive: false });
+
+    expect(ht.get(c2).mAlive).to.equal(false);
     done();
   });
 });

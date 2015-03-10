@@ -7,7 +7,6 @@
     }
 
     canvas {
-      width: 100%;
     }
     </style>
   </head>
@@ -19,8 +18,12 @@
   <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <script>
     var exports = {};
+    var require = function(){};
   </script>
+  <script src="Cell.js"></script>
   <script src="Graph.js"></script>
+  <script src="HashTable.js"></script>
+  <script src="World.js"></script>
 
   <script>
   $(document).ready(function() {
@@ -31,7 +34,10 @@
 
     context.strokeStyle = '#fff';
     var graph = new Graph(100, 100, canvasWidth, canvasWidth);
-    graph.draw(context);
+    var world = new World(graph);
+    world.addCell(10, 5, true);
+    world.addCell(20, 5, true);
+    world.draw(context);
   });
   </script>
 </html>
