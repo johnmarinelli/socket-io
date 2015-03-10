@@ -69,7 +69,7 @@ suite('world', function() {
     w.addCell(5, 10, true);
     w.addCell(2, 4, true);
     w.killCell(2, 4);
-    expect(w.mDead.mSize).to.equal(2);
+    expect(w.mDead.mSize).to.equal(1);
     done();
   });
 });
