@@ -1,14 +1,20 @@
+// Specialized HashTable for any objects that are to be indexed by coordinates.
+// Key: x, y
 function HashTable(hasher) {
   this.mHasher = hasher;
   this.mBuckets = [];
   this.mSize = 0;
+  this.mIndices = [];
 };
 
 HashTable.prototype.insert = function(cell) {
   var index = this.mHasher(cell.mX, cell.mY);
 
   // check to see if this bucket exists.  if not, create a new bucket.
-  if (undefined === this.mBuckets[index]) this.mBuckets[index] = [];
+  if (undefined === this.mBuckets[index]) {
+    this.mBuckets[index] = [];
+    this.mIndices.push(index);
+  }
   
   // create a temporary object to reduce amount of this.mBuckets[index] references
   var bucket = this.mBuckets[index],
@@ -36,10 +42,8 @@ HashTable.prototype.insert = function(cell) {
 };
 
 // simple find and return.
-HashTable.prototype.get = function(cell) {
-  var hashTable = this,
-      x = cell.mX,
-      y = cell.mY;
+HashTable.prototype.get = function(x, y) {
+  var hashTable = this;
 
   return this.find(x, y, function(data, err) {
     if (err) {
@@ -51,10 +55,8 @@ HashTable.prototype.get = function(cell) {
 };
 
 // find and remove.
-HashTable.prototype.remove = function(cell) {
-  var hashTable = this,
-      x = cell.mX,
-      y = cell.mY;
+HashTable.prototype.remove = function(x, y) {
+  var hashTable = this;
   
   return this.find(x, y, function(data, err) {
     // callback.  removes the found element.
@@ -75,10 +77,8 @@ HashTable.prototype.remove = function(cell) {
 };
 
 // find and update.
-HashTable.prototype.update = function(cell, newData) {
-  var hashTable = this,
-      x = cell.mX,
-      y = cell.mY;
+HashTable.prototype.update = function(x, y, newData) {
+  var hashTable = this;
 
   return this.find(x, y, function(data, err) {
     if (err) {
@@ -123,18 +123,17 @@ HashTable.prototype.find = function(x, y, cb) {
 };
 
 HashTable.prototype.forEach = function(cb) {
-  var bucketsCount = this.mBuckets.length,
+  var indicesCount = this.mIndices.length,
       i = 0;
-  
-  for ( ; i < bucketsCount; ++i) {
-    // TODO: 
-    // have an array of valid indices instead of doing this ugly check
-    if (undefined !== this.mBuckets[i]) {
-      var elemCount = this.mBuckets[i].length,
-          j = 0;
-      for ( ; j < elemCount; ++j) {
-        cb(this.mBuckets[i][j]);
-      }
+
+  // iterate through each bucket index
+  for ( ; i < indicesCount; ++i) {
+    var index = this.mIndices[i],
+        elemCount = this.mBuckets[index].length,
+        j = 0;
+    // in each bucket, perform callback on element
+    for ( ; j < elemCount; ++j) {
+      cb(this.mBuckets[index][j]);
     }
   }
 };
