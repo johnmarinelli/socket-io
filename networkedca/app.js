@@ -7,7 +7,9 @@ var app = require('express')(),
 var clients = {};
 
 // Seed world
-var world = new World(new Graph(100, 100, 1000, 1000));
+var graph = new Graph(100, 100, 1000, 1000);
+var world = new World(graph);
+
 (function(world) {
   world.addCell(50, 50, true);
   world.addCell(50, 49, true);
@@ -24,12 +26,18 @@ io.on('connection', function(socket) {
   clients[socket.id] = socket;
   
   // On connection, give client information for drawing graph
-  io.emit('graph dimensions', world.mGraph); 
+  io.emit('graph dimensions', world.mGraph, socket.id);
 
   // clientside sends coordinates
   socket.on('send coords', function(coords) {
-    // room wide broadcast coords
-    io.emit('receive coords', coords, socket.id);
+    // flip cell at coords
+    coords[0] /= graph.mColumnWidth;
+    coords[1] /= graph.mRowHeight;
+
+    world.flipCell(coords[0], coords[1]);
+
+    // let room know who changed which coords
+    io.emit('ack coords', coords, socket.id);
   });
 });
 
@@ -39,6 +47,6 @@ http.listen(3000, function() {
   console.log(world.mLiving.mSize);
     world.update();
     io.emit('live cells', world.getLiveCells());
-  }, 500);
+  }, 2000);
   console.log('Listening on 3000');
 });

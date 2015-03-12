@@ -105,6 +105,11 @@ World.prototype.killCell = function(x, y) {
   this.mDead.insert(cell)
 };
 
+World.prototype.flipCell = function(x, y) {
+  var cell = this.getCell(x, y);
+  cell.mAlive ? this.killCell(x, y) : this.reviveCell(x, y);
+};
+
 World.prototype.update = function() {
   var world = this,
       toDie = [],

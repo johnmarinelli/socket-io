@@ -18,10 +18,6 @@
   <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    var exports = {};
-  </script>
-  
-  <script>
   $(document).ready(function() {
     var socket = io();
         canvas = document.getElementById('canvas');
@@ -30,7 +26,23 @@
         canvasHeight = canvas.height,
         graph = undefined;
 
+    // when user clicks on canvas, snap coords to grid and send 
+    canvas.onmouseup = function(e) {
+      var cellWidth = graph.mColumnWidth,
+          cellHeight = graph.mRowHeight;
+      canvasX = e.pageX - canvas.offsetLeft;
+      canvasY = e.pageY - canvas.offsetTop;
+      
+      canvasX -= (canvasX % graph.mColumnWidth);
+      canvasY -= (canvasY % graph.mRowHeight);
+    
+      context.fillStyle = '#00ff00';
+      context.fillRect(canvasX, canvasY, cellWidth, cellHeight);
+      socket.emit('send coords', [canvasX, canvasY]);
+    };
+
     var drawGraph = function() {
+      context.beginPath();
       context.strokeStyle = '#fff';
       for (var x = 0; x <= graph.mWidth; x += graph.mColumnWidth) {
         context.moveTo(x, 0);
@@ -41,32 +53,35 @@
         context.moveTo(0, y);
         context.lineTo(graph.mWidth, y);
       }
-      
+
       context.stroke();
     };
     
     // Get graph info on initial connection
-    socket.on('graph dimensions', function(g) {
+    socket.on('graph dimensions', function(g, id) {
+      if (socket.id !== id) return;
       graph = g;
       drawGraph();
     });
 
     socket.on('live cells', function(cells) {
-      context.fillStyle = '#000';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      drawGraph();
-      context.fillStyle = '#fff';
-      var len = cells.length,
-          i = 0;
-      // 'cells' is an array of [x, y]
-      for ( ; i < len; ++i) {
-        var coords = cells[i],
-            x = coords[0] * graph.mColumnWidth,
-            y = coords[1] * graph.mRowHeight,
-            cellWidth = graph.mColumnWidth,
-            cellHeight = graph.mRowHeight;
-        context.fillRect(x, y, cellWidth, cellHeight);
-      }
+      window.requestAnimationFrame(function(timestamp) {
+        context.fillStyle = '#000';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        drawGraph();
+        context.fillStyle = '#fff';
+        var len = cells.length,
+            i = 0;
+        // 'cells' is an array of [x, y]
+        for ( ; i < len; ++i) {
+          var coords = cells[i],
+              x = coords[0] * graph.mColumnWidth,
+              y = coords[1] * graph.mRowHeight,
+              cellWidth = graph.mColumnWidth,
+              cellHeight = graph.mRowHeight;
+          context.fillRect(x, y, cellWidth, cellHeight);
+        }
+      });
     });
   });
   </script>
