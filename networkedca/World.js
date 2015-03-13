@@ -167,7 +167,10 @@ World.prototype.update = function() {
     // we protect user touched cells for one round
     if (!c.protect) {
       world.killCell(c.mX, c.mY);
-      c.protect = false;
+    }
+    else {
+      var cell = world.getCell(c.mX, c.mY);
+      cell.protect = false;
     }
   }
   
@@ -178,7 +181,10 @@ World.prototype.update = function() {
     // we protect user touched cells for one round
     if (!c.protect) {
       world.reviveCell(c.mX, c.mY);
-      c.protect = false;
+    }
+    else {
+      var cell = world.getCell(c.mX, c.mY);
+      cell.protect = false;
     }
   }
 

@@ -4,21 +4,123 @@
     <style>
     body {
       background-color: black;
+      color: white;
+    }
+
+    .left {
+      float: left;
+      width: 25%;
+    } 
+
+    .left h2 {
+      text-align: center;
     }
 
     canvas {
     }
+
+    .drag-and-drop-container {
+      background-color: gray;
+      height: 40px;
+      width: 100%;
+    } 
+    .drag-and-drop-container ul {
+      list-style-type: none;
+    } .drag-and-drop-container ul > li {
+        display: inline-block;
+        width: 10%;
+      }
     </style>
   </head>
-
   <body>
+    <div class="left">
+      <h2>Everyone</h2>
+      <h2>Plays</h2>
+      <h2>Life</h2>
+      <hr/>
+      <h2> What is Conway's Game Of Life? </h2>
+      <p>A 2d cellular automata model.
+      <hr />
+      <h2> Rules </h2>
+      <p>Each cell is the center of its own 3x3 neighborhood.  Whether a cell lives or dies depends on the amount of live neighbors.</p>
+      <span>A cell will die in the next generation if...</span>
+      <ul>
+        <li>It has less than two live neighbors, due to underpopulation.</li>
+        <li>It has more than three live neighbors, due to overpopulation.</li>
+      </ul>
+      <span>A cell will live to the next generation if...</span>
+      <ul>
+        <li>It has either two or three live neighbors.</li>
+      </ul>
+      <span>Finally, a cell will be revived in the next generation if...</span>
+      <ul>
+        <li>It has exactly three live neighbors, due to reproduction.</li>
+      </ul>
+      <hr />
+      <h2> How To Play </h2>
+      <p>Click on the cell whose state you want to switch.  The cell will change state in the next generation.</p>
+    </div>
     <canvas id="canvas" width="1000px" height="1000px"></canvas>
+
+    <footer>
+      <!-- drag and drop interface -->
+      <div class="drag-and-drop-container">
+        <ul>
+          <li data-ca-shape="r-pentomino">R-pentomino</li>
+          <li data-ca-shape="square">Square</li>
+        </ul>
+      </div>
+    </footer>
   </body>
 
   <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script>
+  var predefinedShapes = {
+    'r-pentomino': [ [0, 1, 1],
+                     [1, 1, 0],
+                     [0, 1, 0] ],
+
+    'square': [ [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1] ]
+  };
+
+  var CAPredefinedShapes = (function(predefinedShapes){
+    this.currentSelected = null;
+
+    this.getCurrentSelected = function(name) {
+    console.log(name);
+      return predefinedShapes[name];
+    };
+
+    return this;
+  })(predefinedShapes);
+
+  var User = (function() {
+    this.isDragging = false;
+  })();
+
+  var CanvasExtensions = function(canvas) {
+  };
+  
+  var User = function() {
+    this.isDragging = false;
+  };
+
   $(document).ready(function() {
+    var user = new User;
+
+    // drag and drop 
+    $('.drag-and-drop-container ul li').mousedown(function() {
+      var shape = CAPredefinedShapes
+                  .getCurrentSelected($(this).attr('data-ca-shape'));
+      user.isDragging = true;
+    }).mouseup(function() {
+      user.isDragging = false;
+    });
+
+    // initialize socket.io
     var socket = io();
         canvas = document.getElementById('canvas');
         context = canvas.getContext('2d');
@@ -26,19 +128,38 @@
         canvasHeight = canvas.height,
         graph = undefined;
 
+    // when user is dragging a shape onto canvas, draw a shadow
+    canvas.onmousemove = function(e) {
+      if (user.isDragging) {
+        // TODO:
+        // Draw a 'floating' drag and drop 
+        console.log('dragged');
+      }
+    };
+
     // when user clicks on canvas, snap coords to grid and send 
     canvas.onmouseup = function(e) {
-      var cellWidth = graph.mColumnWidth,
-          cellHeight = graph.mRowHeight;
-      canvasX = e.pageX - canvas.offsetLeft;
-      canvasY = e.pageY - canvas.offsetTop;
+      if (!user.isDragging) {
+        var cellWidth = graph.mColumnWidth,
+            cellHeight = graph.mRowHeight;
+        canvasX = e.pageX - canvas.offsetLeft;
+        canvasY = e.pageY - canvas.offsetTop;
+        
+        canvasX -= (canvasX % graph.mColumnWidth);
+        canvasY -= (canvasY % graph.mRowHeight);
       
-      canvasX -= (canvasX % graph.mColumnWidth);
-      canvasY -= (canvasY % graph.mRowHeight);
-    
-      context.fillStyle = '#00ff00';
-      context.fillRect(canvasX, canvasY, cellWidth, cellHeight);
-      socket.emit('send coords', [canvasX, canvasY]);
+        context.fillStyle = '#00ff00';
+        context.fillRect(canvasX, canvasY, cellWidth, cellHeight);
+        socket.emit('send coords', [canvasX, canvasY]);
+      }
+
+      // if user was dragging, place a shape there 
+      else {
+        // TODO:
+        // build a snapToGrid() function and place shape at left-topmost 
+        // interval of width height
+        user.isDragging = false;
+      }
     };
 
     var drawGraph = function() {
@@ -64,11 +185,17 @@
       drawGraph();
     });
 
+    // redraw canvas
     socket.on('live cells', function(cells) {
       window.requestAnimationFrame(function(timestamp) {
+        // clear canvas
         context.fillStyle = '#000';
         context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // draw graph
         drawGraph();
+
+        // draw cells
         context.fillStyle = '#fff';
         var len = cells.length,
             i = 0;
