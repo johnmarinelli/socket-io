@@ -20,6 +20,10 @@ function World(graph) {
   // hash table for dead cells
   this.mDead = new HashTable(hasher);
 
+  // hashmap for storing cells to flip between updates 
+  // when user clicks on canvas
+  this.mCellsToFlip = new HashTable(hasher);
+
   var height = graph.mRows,
       y = 0,
       width = graph.mCols,
@@ -52,7 +56,11 @@ function World(graph) {
     y = Math.min(y, this.mGraph.mRows);
 
     var neighborCount = 0;
-
+    
+    // start at top left corner and move row by row
+    // counting the cells that are alive
+    // ignore the middle cell bcause that's simply
+    // the cell that's checking for neighbors
     for (var i = 0; i < 3; ++i) {
       var row = this.mCells[y+i];
       for (var j = 0; j < 3; ++j) {
@@ -64,11 +72,12 @@ function World(graph) {
         }
       }
     }
-
     return neighborCount;
   };
 }
 
+// TODO:
+// remove this and replace any intializing code with call to reviveCell()
 World.prototype.addCell = function(x, y, alive) {
   alive = alive || false;
 
@@ -79,10 +88,12 @@ World.prototype.addCell = function(x, y, alive) {
   if (alive) this.reviveCell(x, y);
 };
 
+// return cell. column major
 World.prototype.getCell = function(x, y) {
   return this.mCells[y][x];
 };
 
+// switch cell state to alive, switch containers
 World.prototype.reviveCell = function(x, y) {
   var cell = this.mDead.get(x, y);
   if (!cell) {
@@ -94,6 +105,7 @@ World.prototype.reviveCell = function(x, y) {
   this.mDead.remove(cell.mX, cell.mY);
 }
 
+// set cell state to dead, switch containers
 World.prototype.killCell = function(x, y) {
   var cell = this.mLiving.get(x, y);
   if (!cell) {
@@ -105,41 +117,88 @@ World.prototype.killCell = function(x, y) {
   this.mDead.insert(cell)
 };
 
+// Adds cell to the 'flipping' stage, in between discrete timesteps
+World.prototype.addCellToFlip = function(x, y) {
+  if (!this.mCellsToFlip.hasElement(x, y)) {
+  console.log(this.getCell(x,y));
+    this.mCellsToFlip.insert(this.getCell(x,y));
+  }
+};
+
+// called at end of update() on all the cells in mCellsToFlip
+// flips cell state and its container
 World.prototype.flipCell = function(x, y) {
   var cell = this.getCell(x, y);
   cell.mAlive ? this.killCell(x, y) : this.reviveCell(x, y);
 };
 
+// checks each cell against the rules.
+// does user input at the very end.
+// this isn't usually how a traditional event loop goes;
+// however, CA is interesting because of its nondeterministic nature
+// so instead of handling user input at beginning - aka,
+// when user *doesn't* know what the state of system will be after the update(),
+// we handle it at the end because that's when you can manipulate the system
+// deterministically.
 World.prototype.update = function() {
   var world = this,
       toDie = [],
       toLife = [];
 
-  // store cells to be revived/killed in separate arrays,
-  // then revive/kill them as necessary.
-  // this is to preserve state of each cell during the algorithm
+  // store cells to be killed in separate array to preserve state
+  // of cell during rule checking
   this.mLiving.forEach(function(cell) {
     var neighborCount = world.countNeighbors(cell.mX, cell.mY);
     if (neighborCount < 2) toDie.push(cell);
     if (neighborCount > 3) toDie.push(cell);
   });
   
+  // store cells to be revived in separate array to preserve state
+  // of cell during rule checking
   this.mDead.forEach(function(cell) {
     var neighborCount = world.countNeighbors(cell.mX, cell.mY);
     if (neighborCount === 3) toLife.push(cell);
   });
 
+  // kill cell
   for (var i = 0; i < toDie.length; ++i) {
-    var c = toDie[i]
-    world.killCell(c.mX, c.mY);
+    var c = toDie[i];
+
+    // we protect user touched cells for one round
+    if (!c.protect) {
+      world.killCell(c.mX, c.mY);
+      c.protect = false;
+    }
   }
   
+  // revive cell
   for (var i = 0; i < toLife.length; ++i) {
-    var c = toLife[i]
-    world.reviveCell(c.mX, c.mY);
+    var c = toLife[i];
+    
+    // we protect user touched cells for one round
+    if (!c.protect) {
+      world.reviveCell(c.mX, c.mY);
+      c.protect = false;
+    }
   }
+
+  this.mCellsToFlip.forEach(function(c) {
+    var x = c.mX,
+        y = c.mY;
+
+    // since cells stored in mCellsToFlip preserve old state,
+    // and we want to overwrite the new state,
+    // we have to ask world for the cell again
+    var cell = world.getCell(x, y);
+    console.log('FLIPPING ' + cell.mAlive);
+    cell.mAlive ? world.killCell(x, y) : world.reviveCell(x, y);
+    cell.protect = true;
+  });
+
+  this.mCellsToFlip.clear(); 
 };
 
+// function for clientside rendering
 World.prototype.getLiveCells = function() {
   var live = [];
 
@@ -150,6 +209,7 @@ World.prototype.getLiveCells = function() {
   return live;
 };
 
+// not used much in server-client mode but helpful in debugging
 World.prototype.draw = function(context) {
   var world = this,
       graphColumnWidth = world.mGraph.mColumnWidth,

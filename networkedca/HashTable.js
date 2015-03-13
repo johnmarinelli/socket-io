@@ -54,6 +54,18 @@ HashTable.prototype.get = function(x, y) {
   });
 };
 
+// returns true if element exists in hash.
+HashTable.prototype.hasElement = function(x, y) {
+  var hashTable = this;
+
+  return this.find(x, y, function(data, err) {
+    if (!data) {
+      return false;
+    }
+    return true;
+  });
+};
+
 // find and remove.
 HashTable.prototype.remove = function(x, y) {
   var hashTable = this;
@@ -120,6 +132,12 @@ HashTable.prototype.find = function(x, y, cb) {
 
   // there's a bucket, but no item
   return cb(false, 'No element found at index: ' + index + '.  X: ' + x + ' Y: ' + y);
+};
+
+HashTable.prototype.clear = function() {
+  this.mBuckets = [];
+  this.mSize = 0;
+  this.mIndices = [];
 };
 
 HashTable.prototype.forEach = function(cb) {

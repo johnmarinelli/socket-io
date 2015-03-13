@@ -33,8 +33,7 @@ io.on('connection', function(socket) {
     // flip cell at coords
     coords[0] /= graph.mColumnWidth;
     coords[1] /= graph.mRowHeight;
-
-    world.flipCell(coords[0], coords[1]);
+    world.addCellToFlip(coords[0], coords[1]);
 
     // let room know who changed which coords
     io.emit('ack coords', coords, socket.id);
