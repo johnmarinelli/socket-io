@@ -2,7 +2,7 @@ function Cell(x, y, alive) {
   this.mAlive = alive;
   this.mX = x;
   this.mY = y;
-};
+}
 
 Cell.prototype.update = function(newData) {
   // have to do explicit checking instead of short circuting

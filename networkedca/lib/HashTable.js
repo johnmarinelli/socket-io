@@ -5,7 +5,7 @@ function HashTable(hasher) {
   this.mBuckets = [];
   this.mSize = 0;
   this.mIndices = [];
-};
+}
 
 HashTable.prototype.insert = function(cell) {
   var index = this.mHasher(cell.mX, cell.mY);

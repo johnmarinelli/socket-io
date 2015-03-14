@@ -103,7 +103,7 @@ World.prototype.reviveCell = function(x, y) {
   this.mCells[y][x].mAlive = true;
   this.mLiving.insert(cell);
   this.mDead.remove(cell.mX, cell.mY);
-}
+};
 
 // set cell state to dead, switch containers
 World.prototype.killCell = function(x, y) {
@@ -114,7 +114,7 @@ World.prototype.killCell = function(x, y) {
   }
   this.mCells[y][x].mAlive = false;
   this.mLiving.remove(cell.mX, cell.mY);
-  this.mDead.insert(cell)
+  this.mDead.insert(cell);
 };
 
 // Adds cell to the 'flipping' stage, in between discrete timesteps
@@ -138,7 +138,9 @@ World.prototype.flipCell = function(x, y) {
 World.prototype.update = function() {
   var world = this,
       toDie = [],
-      toLife = [];
+      toLife = [],
+      i = 0,
+      c = null;
 
   this.mCellsToFlip.forEach(function(c) {
     var x = c.mX,
@@ -171,14 +173,14 @@ World.prototype.update = function() {
   });
 
   // kill cell
-  for (var i = 0; i < toDie.length; ++i) {
-    var c = toDie[i];
+  for (i = 0; i < toDie.length; ++i) {
+    c = toDie[i];
     world.killCell(c.mX, c.mY);
   }
   
   // revive cell
-  for (var i = 0; i < toLife.length; ++i) {
-    var c = toLife[i];
+  for (i = 0; i < toLife.length; ++i) {
+    c = toLife[i];
     world.reviveCell(c.mX, c.mY);
   }
 };
@@ -204,7 +206,7 @@ World.prototype.draw = function(context) {
     // convert cell coordinates to screen coordinates
     var x = x_ * graphColumnWidth,
         y = y_ * graphRowHeight;
-    context.fillRect(x, y, world.mCellWidth, world.mCellHeight)
+    context.fillRect(x, y, world.mCellWidth, world.mCellHeight);
   }
 
   // draw living cells in white
