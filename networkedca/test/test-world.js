@@ -6,8 +6,8 @@ var Lab = require('lab'),
     before = lab.before,
     after = lab.after,
     expect = Code.expect,
-    Graph = require('../Graph.js').Graph;
-    World = require('../World.js').World;
+    Graph = require('../lib/Graph.js').Graph;
+    World = require('../lib/World.js').World;
 
 suite('world', function() {
   test('initialize a 10x10 world', function(done) {

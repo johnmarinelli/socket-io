@@ -1,8 +1,8 @@
 var app = require('express')(),
     http = require('http').Server(app),
     io = require('socket.io')(http),
-    World = require('./World.js').World,
-    Graph = require('./Graph.js').Graph;
+    World = require('./lib/World.js').World,
+    Graph = require('./lib/Graph.js').Graph;
 
 var clients = {};
 
@@ -19,7 +19,7 @@ var world = new World(graph);
 }(world));
 
 app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(__dirname + '/views/index.html');
 });
 
 io.on('connection', function(socket) {

@@ -6,8 +6,8 @@ var Lab = require('lab'),
     before = lab.before,
     after = lab.after,
     expect = Code.expect,
-    Cell = require('../Cell.js').Cell,
-    HashTable = require('../HashTable.js').HashTable;
+    Cell = require('../lib/Cell.js').Cell,
+    HashTable = require('../lib/HashTable.js').HashTable;
 
 suite('hashtable', function() {
   test('add a cell with coordinate (1,2) into hashtable', function(done) {

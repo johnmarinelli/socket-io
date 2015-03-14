@@ -6,7 +6,7 @@ var Lab = require('lab'),
     before = lab.before,
     after = lab.after,
     expect = Code.expect,
-    Graph = require('../Graph.js').Graph;
+    Graph = require('./../lib/Graph.js').Graph;
 
 suite('graph', function() {
   test('returns true when making a 0x0 graph', function(done) {
