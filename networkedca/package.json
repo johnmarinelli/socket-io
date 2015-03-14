@@ -9,6 +9,7 @@
 
   "scripts": {
     "test": "lab",
-    "lint" : "jshint **.js"
+    "lint" : "jshint **.js",
+    "build": "npm run lint && node app.js"
   }
 }

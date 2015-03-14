@@ -1,8 +1,14 @@
-var app = require('express')(),
+var express = require('express'),
+    app = express(),
     http = require('http').Server(app),
     io = require('socket.io')(http),
     World = require('./lib/World.js').World,
     Graph = require('./lib/Graph.js').Graph;
+
+// configure express
+app.use(express.static('public'));
+app.use(express.static('views'));
+console.log(app.get('env'));
 
 var clients = {};
 
@@ -20,6 +26,11 @@ var world = new World(graph);
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/views/index.html');
+});
+
+// ajax request from angular
+app.get('drag_and_drop.html', function(req, res) {
+  res.render('views/drag_and_drop.html');
 });
 
 io.on('connection', function(socket) {
