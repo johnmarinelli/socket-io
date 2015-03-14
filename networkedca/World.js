@@ -135,15 +135,25 @@ World.prototype.flipCell = function(x, y) {
 // checks each cell against the rules.
 // does user input at the very end.
 // this isn't usually how a traditional event loop goes;
-// however, CA is interesting because of its nondeterministic nature
-// so instead of handling user input at beginning - aka,
-// when user *doesn't* know what the state of system will be after the update(),
-// we handle it at the end because that's when you can manipulate the system
-// deterministically.
 World.prototype.update = function() {
   var world = this,
       toDie = [],
       toLife = [];
+
+  this.mCellsToFlip.forEach(function(c) {
+    var x = c.mX,
+        y = c.mY;
+
+    // since cells stored in mCellsToFlip preserve old state,
+    // and we want to overwrite the new state,
+    // we have to ask world for the cell again
+    var cell = world.getCell(x, y);
+    console.log('FLIPPING ' + cell.mAlive);
+    cell.mAlive ? world.killCell(x, y) : world.reviveCell(x, y);
+    cell.protect = true;
+  });
+
+  this.mCellsToFlip.clear(); 
 
   // store cells to be killed in separate array to preserve state
   // of cell during rule checking
@@ -163,45 +173,14 @@ World.prototype.update = function() {
   // kill cell
   for (var i = 0; i < toDie.length; ++i) {
     var c = toDie[i];
-
-    // we protect user touched cells for one round
-    if (!c.protect) {
-      world.killCell(c.mX, c.mY);
-    }
-    else {
-      var cell = world.getCell(c.mX, c.mY);
-      cell.protect = false;
-    }
+    world.killCell(c.mX, c.mY);
   }
   
   // revive cell
   for (var i = 0; i < toLife.length; ++i) {
     var c = toLife[i];
-    
-    // we protect user touched cells for one round
-    if (!c.protect) {
-      world.reviveCell(c.mX, c.mY);
-    }
-    else {
-      var cell = world.getCell(c.mX, c.mY);
-      cell.protect = false;
-    }
+    world.reviveCell(c.mX, c.mY);
   }
-
-  this.mCellsToFlip.forEach(function(c) {
-    var x = c.mX,
-        y = c.mY;
-
-    // since cells stored in mCellsToFlip preserve old state,
-    // and we want to overwrite the new state,
-    // we have to ask world for the cell again
-    var cell = world.getCell(x, y);
-    console.log('FLIPPING ' + cell.mAlive);
-    cell.mAlive ? world.killCell(x, y) : world.reviveCell(x, y);
-    cell.protect = true;
-  });
-
-  this.mCellsToFlip.clear(); 
 };
 
 // function for clientside rendering
