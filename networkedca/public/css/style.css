@@ -1,0 +1,81 @@
+body {
+  font-family: 'Open Sans Condensed', sans-serif;
+  font-weight: 400;
+  background-color: black;
+  color: white;
+}
+
+a {
+  color: lightblue;
+}
+
+.left {
+  float: left;
+  width: 25%;
+  font-size: 1.2em;
+}
+
+.title {
+  font-family: 'Press Start 2P', Courier;
+}
+.left ul {
+  list-style-type: square;
+}
+
+.left h2 {
+  font-size: 1em;
+  text-align: center;
+}
+
+.canvases-wrapper {
+  position: relative;
+  float: right;
+  margin-bottom: 50px;
+} .canvases-wrapper canvas {
+  } .canvases-wrapper canvas#drag-and-drop-canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      background-color: transparent;
+      pointer-events: none;
+    }
+
+.bottom-spacer {
+  height: 50px;
+}
+
+footer {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  left: 0;  
+}
+.drag-and-drop-container {
+  background-color: black;
+  opacity: .8;
+  border-top: solid thin white;
+  height: 40px;
+  width: 100%;
+} 
+.drag-and-drop-container ul {
+  list-style-type: none;
+  margin: 0px;
+  padding-left: 0px;
+} .drag-and-drop-container ul > li {
+    display: inline-block;
+    width: auto;
+  }
+
+@media (max-width: 979px) {
+
+.left {
+  width: 100%;
+}
+
+.canvases-wrapper {
+  float: none; 
+}
+
+.drag-and-drop container ul > li {
+}
+}

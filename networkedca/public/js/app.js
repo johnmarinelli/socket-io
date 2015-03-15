@@ -1,23 +1,11 @@
 // container for predefined patterns.
-(function() {
+(function(patterns) {
   var lifePatterns = angular.module('lifePatterns', []);
 
   lifePatterns.controller('lifePatterns', function($scope) {
-    $scope.lifePatterns = {
-      'r-pentomino': [ [0, 1, 1],
-                       [1, 1, 0],
-                       [0, 1, 0] ],
-
-      'square': [ [1, 1, 1],
-                  [1, 1, 1],
-                  [1, 1, 1] ],
-      
-      'something': [ [1,0],
-                     [0, 1],
-                     [1, 0] ]
-    };
+    $scope.lifePatterns = patterns;
   });
-}());
+}(lifePatterns));
 
 // HTML template for the drag and drop footer.
 (function() {
@@ -31,7 +19,18 @@
   });
 }());
 
-(function() {
+(function(user) {
   var app = angular.module('cellularAutomata', ['dragAndDropDirective', 'lifePatterns']);
-}());
+
+  // set on click after angular is done with its ng-repeat
+  app.directive('setClickHandler', function() {
+    return function(scope, elem, attrs) {
+      $(elem).click(function() {
+        var shape = CAPredefinedShapes
+                    .getCurrentSelected($(this).attr('data-ca-shape'));
+        user.currentShape = shape;
+      });
+    };
+  });
+}(user));
 

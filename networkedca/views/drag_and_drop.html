@@ -1,11 +1,8 @@
 <!-- drag and drop interface -->
 <div class="drag-and-drop-container" ng-controller="lifePatterns">
   <ul>
-    <li ng-repeat="(key, value) in lifePatterns" data-ca-shape="{{ key }}">
-      {{ key }}
+    <li ng-repeat="(key, value) in lifePatterns" data-ca-shape="{{ key }}" set-click-handler>
+      <button>{{ key }}</button>
     </li> 
-<!--    <li data-ca-shape="r-pentomino">R-pentomino</li>
-    <li data-ca-shape="square">Square</li>
-    <li data-ca-shape="something">Something</li> -->
   </ul>
 </div>

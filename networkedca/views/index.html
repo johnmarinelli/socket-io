@@ -1,59 +1,20 @@
 <!doctype html>
 <html>
   <head>
-    <style>
-    body {
-      background-color: black;
-      color: white;
-    }
-
-    .left {
-      float: left;
-      width: 25%;
-    } 
-
-    .left h2 {
-      text-align: center;
-    }
-
-    .canvases-wrapper {
-      position: relative;
-      float: right;
-    } .canvases-wrapper canvas {
-      } .canvases-wrapper canvas#drag-and-drop-canvas {
-          position: absolute;
-          left: 0;
-          top: 0;
-          background-color: transparent;
-        }
-    
-    footer {
-      position: fixed;
-      width: 100%;
-      bottom: 0;
-      left: 0;  
-    }
-    .drag-and-drop-container {
-      background-color: gray;
-      height: 40px;
-      width: 100%;
-    } 
-    .drag-and-drop-container ul {
-      list-style-type: none;
-    } .drag-and-drop-container ul > li {
-        display: inline-block;
-        width: 10%;
-      }
-    </style>
+    <link href='http://fonts.googleapis.com/css?family=Press+Start+2P' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+    <link href="css/style.css" rel="stylesheet" type="text/css">
   </head>
   <body ng-app="cellularAutomata">
     <div class="left">
-      <h2>Everyone</h2>
-      <h2>Plays</h2>
-      <h2>Life</h2>
+      <div class="title">
+        <h2>Everyone</h2>
+        <h2>Plays</h2>
+        <h2>Life</h2>
+      </div>
       <hr/>
       <h2> What is Conway's Game Of Life? </h2>
-      <p>A 2d cellular automata model.
+      <p>A <a href="http://simple.wikipedia.org/wiki/Turing_complete">Turing-Complete</a>, 2d cellular automata model.</p>
       <hr />
       <h2> Rules </h2>
       <p>Each cell is the center of its own 3x3 neighborhood.  Whether a cell lives or dies depends on the amount of live neighbors.</p>
@@ -79,123 +40,31 @@
       <canvas id="canvas" width="1000px" height="1000px"></canvas>
       <canvas id="drag-and-drop-canvas" width="0px" height="0px"></canvas>
     </div>
-  
+    <div class="bottom-spacer">
+    </div>
     <footer>
       <!-- drag and drop interface -->
       <div class="drag-and-drop-container" ng-controller="lifePatterns">
-        <ul>
-          <li data-ca-shape="r-pentomino">R-pentomino</li>
-          <li data-ca-shape="square">Square</li>
-          <li data-ca-shape="something">Something</li>
-        </ul>
+        <drag-and-drop></drag-and-drop>
       </div>
-<!-- TODO: convert to angular  <drag-and-drop></drag-and-drop>  -->
     </footer>
   </body>
 
+  <script src="js/LifePatterns.js"></script>
+  <script>
+  var User = function() {
+    this.currentShape = [[]];
+  };
+  var user = new User;
+  </script>
   <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.14/angular.min.js"></script>  use in production -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.14/angular.js"></script>
   <script src="js/app.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="js/CanvasExtensions.js"></script>
   <script>
-  </script>
-  <script>
-  var predefinedShapes = {
-    'r-pentomino': [ [0, 1, 1],
-                     [1, 1, 0],
-                     [0, 1, 0] ],
-
-    'square': [ [1, 1, 1],
-                [1, 1, 1],
-                [1, 1, 1] ],
-    
-    'something': [ [1,0],
-                   [0, 1],
-                   [1, 0] ]
-
-  };
-
-  var CAPredefinedShapes = (function(predefinedShapes){
-    // returns selected shape given a name.
-    this.getCurrentSelected = function(name) {
-    console.log(name);
-      return predefinedShapes[name];
-    };
-
-    // iterates over a given shape.
-    // uses: drag & drop hover effect,
-    //       drag & drop placement
-    this.iterateOverShape = function(shape, cb) {
-      var shapeHeight = shape.length,
-          i = 0;
-
-      for ( ; i < shapeHeight; ++i) {
-        var shapeWidth = shape[i].length,
-            j = 0;
-        for ( ; j < shapeWidth; ++j) {
-          // send the cell at index and its coordinates
-          cb(shape[i][j], [i, j]);
-        }
-      }
-    };
-
-    return this;
-  })(predefinedShapes);
-
-  // helper function to initialize some custom canvas functions
-  var CanvasExtensions = (function() {
-    // helper function to calculate position of a click
-    HTMLCanvasElement.prototype.getMouseCoords = function(event){
-      var totalOffsetX = 0;
-      var totalOffsetY = 0;
-      var canvasX = 0;
-      var canvasY = 0;
-      var currentElement = this;
-
-      do{
-        totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-        totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-      }
-      while(currentElement = currentElement.offsetParent)
-
-      canvasX = event.pageX - totalOffsetX;
-      canvasY = event.pageY - totalOffsetY;
-
-      return [canvasX, canvasY];
-    };
-
-    HTMLCanvasElement.prototype.snapToGrid = function(coords, colWidth, rowHeight) {
-        coords[0] -= (coords[0] % colWidth);
-        coords[1] -= (coords[1] % rowHeight);
-
-        return coords;
-    };
-
-    HTMLCanvasElement.prototype.getSnappedCoordinates = function(event, colWidth, rowHeight) {
-      var coords = this.getMouseCoords(event);
-      return this.snapToGrid(coords, colWidth, rowHeight);
-    };
-  })();
-  
-  var User = function() {
-    this.isDragging = false;
-    this.currentShape = [[]];
-  };
-
   $(document).ready(function() {
-    var user = new User;
-
-    // drag and drop 
-    $('.drag-and-drop-container ul li').mousedown(function() {
-      var shape = CAPredefinedShapes
-                  .getCurrentSelected($(this).attr('data-ca-shape'));
-      user.isDragging = true;
-      user.currentShape = shape;
-    }).mouseup(function() {
-      user.isDragging = false;
-    });
-
     // initialize socket.io
     var socket = io();
         canvas = document.getElementById('canvas'),
@@ -226,38 +95,36 @@
 
     // when user is dragging a shape onto canvas, draw a shadow
     canvas.onmousemove = function(e) {
-      if (user.isDragging) {
-        var shape = user.currentShape,
-            coords = canvas.getSnappedCoordinates(e, graph.mColumnWidth, graph.mRowHeight),
-            cellWidth = graph.mColumnWidth,
-            cellHeight = graph.mRowHeight;
-            shapePixelHeight = shape.length * cellWidth,
-            shapePixelWidth = shape[0].length * cellHeight;
+      var shape = user.currentShape,
+          coords = canvas.getSnappedCoordinates(e, graph.mColumnWidth, graph.mRowHeight),
+          cellWidth = graph.mColumnWidth,
+          cellHeight = graph.mRowHeight;
+          shapePixelHeight = shape.length * cellWidth,
+          shapePixelWidth = shape[0].length * cellHeight;
 
-        // 1) move drag and drop canvas to coords with appropriate width & height
-        $(dragAndDropCanvas).css({
-          'left': coords[0],
-          'top': coords[1],
-        });
+      // 1) move drag and drop canvas to coords with appropriate width & height
+      $(dragAndDropCanvas).css({
+        'left': coords[0],
+        'top': coords[1],
+      });
 
-        dragAndDropCanvas.width = shapePixelWidth;
-        dragAndDropCanvas.height = shapePixelHeight;
+      dragAndDropCanvas.width = shapePixelWidth;
+      dragAndDropCanvas.height = shapePixelHeight;
 
-        // Draw a 'floating' drag and drop 
-        CAPredefinedShapes.iterateOverShape(shape, function(cell, cellCoords) {
-          var i = cellCoords[0],
-              j = cellCoords[1];
+      // Draw a 'floating' drag and drop 
+      CAPredefinedShapes.iterateOverShape(shape, function(cell, cellCoords) {
+        var i = cellCoords[0],
+            j = cellCoords[1];
 
-          if (cell == 1) {
-            dragAndDropContext.fillStyle = '#00ff00';
-          }
-          else {
-            dragAndDropContext.fillStyle = 'rgba(255, 255, 255, .5)';
-          }
+        if (cell == 1) {
+          dragAndDropContext.fillStyle = '#00ff00';
+        }
+        else {
+          dragAndDropContext.fillStyle = 'rgba(255, 255, 255, .5)';
+        }
 
-          dragAndDropContext.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight);
-        });
-      }
+        dragAndDropContext.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight);
+      });
     };
 
     // when user clicks on canvas, snap coords to grid and send 
@@ -265,39 +132,23 @@
       var coords = canvas.getSnappedCoordinates(e, graph.mColumnWidth, graph.mRowHeight),
           cellWidth = graph.mColumnWidth,
           cellHeight = graph.mRowHeight;
-          
-      if (!user.isDragging) {
-        var canvasX = coords[0],
-            canvasY = coords[1];
-         
-        context.fillStyle = '#00ff00';
-        context.fillRect(canvasX, canvasY, cellWidth, cellHeight);
-        socket.emit('send coords', [canvasX, canvasY]);
-      }
+      // place a life pattern at a snapped to grid point
+      // shape is an NxM array
+      var shape = user.currentShape;
+      
+      // iterate through the life pattern and fill accordingly
+      CAPredefinedShapes.iterateOverShape(shape, function(cell, cellCoords) {
+        if (cell == 1) {
+          var i = cellCoords[0],
+              j = cellCoords[1],
+              x = coords[0] + (j * cellWidth),
+              y = coords[1] + (i * cellHeight);
 
-      // if user was dragging, place a shape there 
-      else {
-        // place a life pattern at a snapped to grid point
-        // shape is an NxM array
-        var shape = user.currentShape;
-        
-        // iterate through the life pattern and fill accordingly
-        CAPredefinedShapes.iterateOverShape(shape, function(cell, cellCoords) {
-          if (cell == 1) {
-            var i = cellCoords[0],
-                j = cellCoords[1],
-                x = coords[0] + (j * cellWidth),
-                y = coords[1] + (i * cellHeight);
-
-            context.fillStyle = '#00ff00';
-            context.fillRect(x, y, cellWidth, cellHeight);
-            socket.emit('send coords', [x, y]);
-          }
-        });
-        
-        // reset dragging marker
-        user.isDragging = false;
-      }
+          context.fillStyle = '#00ff00';
+          context.fillRect(x, y, cellWidth, cellHeight);
+          socket.emit('send coords', [x, y]);
+        }
+      });
     };
 
     var drawGraph = function() {
