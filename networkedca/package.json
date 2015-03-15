@@ -10,6 +10,7 @@
   "scripts": {
     "test": "lab",
     "lint" : "jshint **.js",
-    "s": "npm run lint && node app.js"
+    "s": "npm run lint && node app.js",
+    "a": ""
   }
 }
